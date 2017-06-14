@@ -16,9 +16,10 @@ def test_parse():
              'field2_&_PA_&_spacy_&_REN_&_:',             
              '/reg*_&_REGEX_&_ex[^/]/',
              'fi_&_METAESC_&_{el_&_METAESC_&_}d']             
-    # print  
+ 
     for s, sres in zip(ts, tsres):
         assert(unquote(s) == sres)
-        # print(s)
-        # print(unquote(s))
-        # print
+
+def test_stripspaces():
+    ts = ['a   : b', 'a:  b', 'a:b', 'a :b']
+    assert(all([stripspaces(s) == 'a:b' for s in ts])) 

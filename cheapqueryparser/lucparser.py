@@ -33,7 +33,10 @@ def unquote(qstring):
         qstring = qstring.replace(esc + c, repstr(rep))
     return qstring
 
-                                  
+def stripspaces(qstring):
+    'Removes spaces surrounding ":".'
+    
+    return re.sub(r' *: *', ':', qstring)
     
                               
 
