@@ -12,6 +12,8 @@ def parse(qstring):
     '''
     pass
 
+# character that can't be in a normal term, except they are quoted
+
 def unquote(qstring):
     '''Replaces quoted characters that are relevant for the parsing.
 
@@ -35,10 +37,33 @@ def unquote(qstring):
 
 def stripspaces(qstring):
     'Removes spaces surrounding ":".'
-    
     return re.sub(r' *: *', ':', qstring)
+
+##################################################
     
-                              
+def repspaces(qstring):
+    "Replace spaces inside range terms"
+    rangeex = re.compile('(?<!\\\\)\{.*?(?<!\\\\)\}')
+    rangeinc = re.compile('(?<!\\\\)\[.*?(?<!\\\\)\]')
+    for pat in [rangeex, rangeinc]:
+        matches = re.findall(pat, qstring)
+        replacements = [re.sub('\s+', '_&_SPACE_&_', s) for s in matches]
+        for m, rep in zip(matches, replacements):
+            qstring = qstring.replace(m, rep)
+    return qstring
+
+def replace_esc_quotes(qstring):
+    "Replaces escaped quotation marks"
+    qstring = re.sub('\\\\"', '_&_QUOT_&_', qstring)
+    return qstring
+    
+def repspaces_in_quotes(qstring):
+    "replce spaces inside quoted strings"
+    re.split(''';(?=(?:[^'"]|'[^']*'|"[^"]*")*$)''', data)
+    
+
+
+
 
 
 ## take that as starting point

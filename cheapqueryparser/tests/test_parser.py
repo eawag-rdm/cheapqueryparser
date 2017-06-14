@@ -23,3 +23,19 @@ def test_parse():
 def test_stripspaces():
     ts = ['a   : b', 'a:  b', 'a:b', 'a :b']
     assert(all([stripspaces(s) == 'a:b' for s in ts])) 
+
+def test_repspaces():
+    ts = ' jhas {82327 TO 938489} {kd\}k  TO  s\{ld} [38748374 TO 982938] \[kshsgh\] [ sdsd \]sdi\[pp p]'
+    tsres = ' jhas {82327_&_SPACE_&_TO_&_SPACE_&_938489} {kd\}k_&_SPACE_&_TO_&_SPACE_&_s\{ld} [38748374_&_SPACE_&_TO_&_SPACE_&_982938] \[kshsgh\] [_&_SPACE_&_sdsd_&_SPACE_&_\]sdi\[pp_&_SPACE_&_p]'
+    assert(tsres == repspaces(ts))
+
+def test_replace_esc_quotes():
+    ts = 'abcde "fgh\\"ij\\"kl" mn\\"op\\"qr'
+    tsres = 'abcde "fgh_&_QUOT_&_ij_&_QUOT_&_kl" mn_&_QUOT_&_op_&_QUOT_&_qr'
+    assert(tsres == replace_esc_quotes(ts))
+
+
+           
+
+
+    
