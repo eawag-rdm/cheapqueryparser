@@ -6,12 +6,6 @@
 import re
 
 
-def parse(qstring):
-    '''Parses qstring.
-
-    '''
-    pass
-
 # character that can't be in a normal term, except they are quoted
 
 def unquote(qstring):
@@ -35,9 +29,6 @@ def unquote(qstring):
         qstring = qstring.replace(esc + c, repstr(rep))
     return qstring
 
-def stripspaces(qstring):
-    'Removes spaces surrounding ":".'
-    return re.sub(r' *: *', ':', qstring)
 
 ##################################################
 
@@ -52,23 +43,55 @@ def replace_esc_quotes(qstring):
     return qstring
  
 def repspaces_in_ranges(qstring):
-    "Replace spaces inside range terms"
+    '''Replace spaces inside range terms and inside quotes.
+    Replace colons in range terms and inside quotes.
+    Replace parenthesies in range terms and inside quotes.
+    
+    '''
     rangeex = re.compile('(?<!\\\\)\{.*?(?<!\\\\)\}')
     rangeinc = re.compile('(?<!\\\\)\[.*?(?<!\\\\)\]')
-    for pat in [rangeex, rangeinc]:
+    quoted = re.compile('".*?"')
+    for pat in [rangeex, rangeinc, quoted]:
         matches = re.findall(pat, qstring)
         replacements = [re.sub('\s+', '_&_SPACE_&_', s) for s in matches]
+        replacements = [re.sub(':', '_&_COLON_&_', r) for r in replacements]
+        replacements = [re.sub('\\(', '_&_PA_&_', r) for r in replacements]
+        replacements = [re.sub('\\)', '_&_RENS_&_', r) for r in replacements]
         for m, rep in zip(matches, replacements):
             qstring = qstring.replace(m, rep)
     return qstring
-   
-def repspaces_in_quotes(qstring):
-    "replace spaces inside quoted strings"
-    matches = re.findall('".*?"', qstring)
+
+def addparenswhitespace(qstring):
+    reparens = {'(': ' ( ', ')': ' ) '}
+    'Add space around "(" and ")" for separation from terms'
+    qstring = re.sub('[\\(\\)]', lambda x: reparens[x.group()], qstring)
+    return qstring
+    
+def stripspaces(qstring):
+    'Removes spaces surrounding ":".'
+    return re.sub(r'\s*(?<!\\\\):\s*', ':', qstring)
+
+def repspaces_in_subqueries(qstring):
+    '''Replace all spaces in field specific subqueries. That is is
+    necessary so that the associaten with the subquery can be maintained.
+    For example 'field:(+term1 -term2)'.
+
+    '''
+    matches = re.findall(':\\(.*?(?<!\\\\)\\)', qstring)
     replacements = [re.sub('\s+', '_&_SPACE_&_', s) for s in matches]
     for m, rep in zip(matches, replacements):
         qstring = qstring.replace(m, rep)
     return qstring
+
+def parse(qstring):
+    qstring = replace_metaescape(qstring) # replace \\
+    qstring = replace_esc_quotes(qstring) # replace \"
+    qstring = repspaces_in_ranges(qstring)# replace \s and : in ranges and quotes
+    qstring = addparenswhitespace(qstring) # add whitespace aound parenthesies
+    qstring = stripspaces(qstring) # remove whitespace around :
+    qstring = repspaces_in_subqueries(qstring) # make subqueries one item
+    splitted = qstring.split()
+    return splitted
 
 
 
