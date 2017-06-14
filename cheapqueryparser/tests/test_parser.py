@@ -8,18 +8,6 @@ mainpath = os.path.abspath(os.path.join(curpath, '../..'))
 sys.path.insert(0, mainpath)
 from cheapqueryparser.lucparser import *
 
-# def test_parse():
-#     ts = ['"lecker \\" quot"', 'fi\{el\}d: \[bodat\]',
-#           'field2\(spacy\):', '/reg*\/ex[^/]/', 'fi\\\\{el\\\\}d']
-#     tsres = ['"lecker _&_QUOT_&_ quot"',
-#              'fi_&_CURL_&_el_&_CURR_&_d: _&_BRA_&_bodat_&_KET_&_',
-#              'field2_&_PA_&_spacy_&_REN_&_:',             
-#              '/reg*_&_REGEX_&_ex[^/]/',
-#              'fi_&_METAESC_&_{el_&_METAESC_&_}d']             
- 
-#     for s, sres in zip(ts, tsres):
-#         assert(unquote(s) == sres)
-
 def test_replace_metaescape():
     ts = r'abc\de \\fg\\h\i  j\k\\l\\\m'
     tsres = (r'abc\de _&_METAESC_&_fg_&_METAESC_&_h\i  '
@@ -62,14 +50,40 @@ def test_repspaces_in_subqueries():
     # print('')
     # print(ts)
     # print(repspaces_in_subqueries(ts))
-
+    
+def test_termdicts():
+    ts = ['hol:"mir"','AND', 'die:wurst', '!', 'OR', '(', 'sonst', 'NOT',
+          'muss:ich', ')', '&&', '+"1 Brot essen!"', '||', '123']
+    tsres = [{'field': 'hol', 'term': '"mir"'}, 'AND',
+             {'field': 'die', 'term': 'wurst'}, '!', 'OR', '(',
+             {'field': None, 'term': 'sonst'}, 'NOT',
+             {'field': 'muss', 'term': 'ich'}, ')', '&&',
+             {'field': None, 'term': '+"1 Brot essen!"'}, '||',
+             {'field': None, 'term': '123'}]
+    assert(tsres == termdicts(ts))
+    # print('')
+    # print ts
+    # print(termdicts(ts))
+    # assert
+        
    
 def test_parse():
     ts = ('term1 "term2" field1 : te\\"rm2 ( [2016 TO 2020:13:2] OR {A to "ABC"}) '
-          '"field2"\\:haha: (term3 AND ("term hmm 4" OR field3:term5))')  
-    print('')
-    print(ts)
-    print(parse(ts))
+          '"field2"\\:haha: (term3 AND ("term hmm 4" OR field3:term5))')
+    tsres = [{'field': None, 'term': 'term1'},
+             {'field': None, 'term': '"term2"'},
+             {'field': 'field1', 'term': 'te_&_QUOT_&_rm2'}, '(',
+             {'field': None, 'term':
+              '[2016_&_SPACE_&_TO_&_SPACE_&_2020_&_COLON_&_13_&_COLON_&_2]'},
+             'OR', {'field': None, 'term': '{A_&_SPACE_&_to_&_SPACE_&_"ABC"}'},
+             ')', {'field': '"field2"\\:haha', 'term':
+                   '(_&_SPACE_&_term3_&_SPACE_&_AND_&_SPACE_&_(_&_SPACE_&_"ter'
+                   'm_&_SPACE_&_hmm_&_SPACE_&_4"_&_SPACE_&_OR_&_SPACE_&_field3'
+                   '_&_COLON_&_term5_&_SPACE_&_)'}, ')']
+    assert(tsres == parse(ts))
+    # print('')
+    # print(ts)
+    # print(parse(ts))
 
 
 

@@ -5,41 +5,46 @@
 
 import re
 
+replacepairs = {
+    'metaesc': ('\\\\\\\\', '_&_METAESC_&_'),
+    'quot': ('\\\\"', '_&_QUOT_&_'),
+    'space': ('\s+', '_&_SPACE_&_'),
+    'colon': (':', '_&_COLON_&_'),
+    'pa': ('\\(', '_&_PA_&_'),
+    'rens': ('\\)', '_&_RENS_&_'),
+    }
 
-# character that can't be in a normal term, except they are quoted
-
-def unquote(qstring):
-    '''Replaces quoted characters that are relevant for the parsing.
-
-    '''
-    def repstr(c):
-        return '_&_{}_&_'.format(c)
-
-    escchars = {'(': 'PA', ')': 'REN',
-               '{': 'CURL', '}':'CURR',
-               '[': 'BRA', ']': 'KET',
-                '/': 'REGEX', '"': 'QUOT'}
-
-    esc = '\\'
-    metaesc = ('\\\\', 'METAESC')
-    # replace escaped escapes
-    qstring = qstring.replace(metaesc[0], repstr(metaesc[1]))
-    # replace escapes
-    for c, rep in escchars.iteritems():
-        qstring = qstring.replace(esc + c, repstr(rep))
-    return qstring
-
-
-##################################################
-
+revpairs = {
+    'metaesc': ('_&_METAESC_&_', '\\\\'),
+    'quot': ('_&_QUOT_&_','\\'),
+    'space': ('_&_SPACE_&_', ' '),
+    'colon': ('_&_COLON_&_', ':'),
+    'pa': ('_&_PA_&_', '('),
+    'rens': ('_&_RENS_&_',')'),
+    }
+    
 def replace_metaescape(qstring):
     "replaces escaped escapechar"
-    qstring = re.sub('\\\\\\\\', '_&_METAESC_&_', qstring)
+    fro, to = replacepairs['metaesc']
+    qstring = re.sub(fro, to, qstring)
     return qstring
 
 def replace_esc_quotes(qstring):
     "Replaces escaped quotation marks"
-    qstring = re.sub('\\\\"', '_&_QUOT_&_', qstring)
+    fro, to = replacepairs['quot']
+    qstring = re.sub(fro, to, qstring)
+    return qstring
+
+def _replace_in_range(qstring, rangepats, repair):
+    '''Replaces according to replacepair in certain intervals
+    of qstring, which are characterized by a list of patterns (rangepats).
+
+    '''
+    for pat in rangepats:
+        matches = re.findall(pat, qstring)
+        replacements = [re.sub(repair[0], repair[1], s) for s in matches]
+        for m, rep in zip(matches, replacements):
+            qstring = qstring.replace(m, rep)
     return qstring
  
 def repspaces_in_ranges(qstring):
@@ -51,14 +56,12 @@ def repspaces_in_ranges(qstring):
     rangeex = re.compile('(?<!\\\\)\{.*?(?<!\\\\)\}')
     rangeinc = re.compile('(?<!\\\\)\[.*?(?<!\\\\)\]')
     quoted = re.compile('".*?"')
-    for pat in [rangeex, rangeinc, quoted]:
-        matches = re.findall(pat, qstring)
-        replacements = [re.sub('\s+', '_&_SPACE_&_', s) for s in matches]
-        replacements = [re.sub(':', '_&_COLON_&_', r) for r in replacements]
-        replacements = [re.sub('\\(', '_&_PA_&_', r) for r in replacements]
-        replacements = [re.sub('\\)', '_&_RENS_&_', r) for r in replacements]
-        for m, rep in zip(matches, replacements):
-            qstring = qstring.replace(m, rep)
+    ranges = [rangeex, rangeinc, quoted]
+    re_pairs = [replacepairs['space'], replacepairs['colon'],
+                replacepairs['pa'], replacepairs['rens']]
+    for repair in re_pairs:
+        qstring = _replace_in_range(qstring, ranges, repair)
+        
     return qstring
 
 def addparenswhitespace(qstring):
@@ -75,14 +78,33 @@ def repspaces_in_subqueries(qstring):
     '''Replace all spaces in field specific subqueries. That is is
     necessary so that the associaten with the subquery can be maintained.
     For example 'field:(+term1 -term2)'.
+    Replace also all colons in field specific subqueries, necessary to prevent
+    incorrect splitting.
 
     '''
-    matches = re.findall(':\\(.*?(?<!\\\\)\\)', qstring)
-    replacements = [re.sub('\s+', '_&_SPACE_&_', s) for s in matches]
-    for m, rep in zip(matches, replacements):
-        qstring = qstring.replace(m, rep)
+    re_pairs = [replacepairs['space'], ('(?<!^):', '_&_COLON_&_')]
+    rangepats = [':\\(.*?(?<!\\\\)\\)']
+    for repair in re_pairs:
+        qstring = _replace_in_range(qstring, rangepats, repair)
     return qstring
 
+def termdicts(qsplitted):
+    '''Replaces term-token in splitted query by dictionaries of the form
+    {'field': fieldname, 'term': term}. In the case of global terms,
+    fieldname is None.
+
+    '''
+    nonterms = 'AND|OR|NOT|!|&&|\\|\\||\\(|\\)'
+    termidx = [i for i, t in enumerate(qsplitted) if not re.match(nonterms, t)]
+    terms = [qsplitted[i] for i in termidx]
+    for i, t in zip(termidx, terms):
+        parts = re.split('(?<!\\\\):', t)
+        if len(parts) == 1:
+            qsplitted[i] = {'field': None, 'term': parts[0]}
+        else:
+            qsplitted[i] = {'field': parts[0], 'term': parts[1]}
+    return qsplitted
+    
 def parse(qstring):
     qstring = replace_metaescape(qstring) # replace \\
     qstring = replace_esc_quotes(qstring) # replace \"
@@ -90,11 +112,12 @@ def parse(qstring):
     qstring = addparenswhitespace(qstring) # add whitespace aound parenthesies
     qstring = stripspaces(qstring) # remove whitespace around :
     qstring = repspaces_in_subqueries(qstring) # make subqueries one item
-    splitted = qstring.split()
-    return splitted
+    return termdicts(qstring.split())
 
-
-
+def unreplace(termdicts):
+    '''Reverses all replacements'''
+    pass
+    
     
     
 
