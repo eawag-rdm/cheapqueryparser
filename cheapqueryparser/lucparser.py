@@ -40,8 +40,18 @@ def stripspaces(qstring):
     return re.sub(r' *: *', ':', qstring)
 
 ##################################################
-    
-def repspaces(qstring):
+
+def replace_metaescape(qstring):
+    "replaces escaped escapechar"
+    qstring = re.sub('\\\\\\\\', '_&_METAESC_&_', qstring)
+    return qstring
+
+def replace_esc_quotes(qstring):
+    "Replaces escaped quotation marks"
+    qstring = re.sub('\\\\"', '_&_QUOT_&_', qstring)
+    return qstring
+ 
+def repspaces_in_ranges(qstring):
     "Replace spaces inside range terms"
     rangeex = re.compile('(?<!\\\\)\{.*?(?<!\\\\)\}')
     rangeinc = re.compile('(?<!\\\\)\[.*?(?<!\\\\)\]')
@@ -51,15 +61,18 @@ def repspaces(qstring):
         for m, rep in zip(matches, replacements):
             qstring = qstring.replace(m, rep)
     return qstring
-
-def replace_esc_quotes(qstring):
-    "Replaces escaped quotation marks"
-    qstring = re.sub('\\\\"', '_&_QUOT_&_', qstring)
-    return qstring
-    
+   
 def repspaces_in_quotes(qstring):
-    "replce spaces inside quoted strings"
-    re.split(''';(?=(?:[^'"]|'[^']*'|"[^"]*")*$)''', data)
+    "replace spaces inside quoted strings"
+    matches = re.findall('".*?"', qstring)
+    replacements = [re.sub('\s+', '_&_SPACE_&_', s) for s in matches]
+    for m, rep in zip(matches, replacements):
+        qstring = qstring.replace(m, rep)
+    return qstring
+
+
+
+    
     
 
 
