@@ -6,18 +6,18 @@ import json
 curpath = os.path.dirname(os.path.realpath(__file__))
 mainpath = os.path.abspath(os.path.join(curpath, '../..'))
 sys.path.insert(0, mainpath)
-from cheapqueryparser.lucparser import *
+import cheapqueryparser.lucparser as lp
 
 def test_replace_metaescape():
     ts = r'abc\de \\fg\\h\i  j\k\\l\\\m'
     tsres = (r'abc\de _&_METAESC_&_fg_&_METAESC_&_h\i  '
              'j\k_&_METAESC_&_l_&_METAESC_&_\m')
-    assert(tsres == replace_metaescape(ts))
+    assert(tsres == lp._replace_metaescape(ts))
 
 def test_replace_esc_quotes():
     ts = 'abcde "fgh\\"ij\\"kl" mn\\"op\\"qr'
     tsres = 'abcde "fgh_&_QUOT_&_ij_&_QUOT_&_kl" mn_&_QUOT_&_op_&_QUOT_&_qr'
-    assert(tsres == replace_esc_quotes(ts))
+    assert(tsres == lp._replace_esc_quotes(ts))
 
 def test_repspaces_in_ranges():
     ts = (' jhas {82327 TO 938489} {kd\}k  TO  s\{ld} '
@@ -41,27 +41,27 @@ def test_repspaces_in_ranges():
     # print('--------------------------------------------------------------')
     # print(repspaces_in_ranges(ts))
     # print('--------------------------------------------------------------')
-    assert(tsres == repspaces_in_ranges(ts))
+    assert(tsres == lp._repspaces_in_ranges(ts))
 
 def test_addparenswhitespace():
     ts = 'aa(bb (c d)e )f'
     tsres = 'aa ( bb  ( c d ) e  ) f'
-    assert(tsres == addparenswhitespace(ts))
+    assert(tsres == lp._addparenswhitespace(ts))
     
 def test_stripspaces():
     ts = ['a   : b', 'a:  b', 'a:b', 'a :b']
-    assert(all([stripspaces(s) == 'a:b' for s in ts]))
+    assert(all([lp._stripspaces(s) == 'a:b' for s in ts]))
 
 def test_repspaces_in_subqueries():
     ts = 'field1:( term1 OR (term2 AND term\\)\\(3) term3 field2:term4'
     tsres = ('field1:(_&_SPACE_&_term1_&_SPACE_&_OR_&_SPACE_&_(term2_&'
              '_SPACE_&_AND_&_SPACE_&_term\\)\\(3) term3 field2:term4')
-    assert(tsres == repspaces_in_subqueries(ts))
+    assert(tsres == lp._repspaces_in_subqueries(ts))
     # print('')
     # print(ts)
     # print(repspaces_in_subqueries(ts))
     
-def test_termdicts():
+def test__termdicts():
     ts = ['hol:"mir"','AND', 'die:wurst', '!', 'OR', '(', 'sonst', 'NOT',
           'muss:ich', ')', '&&', '+"1 Brot essen!"', '||', '123']
     tsres = [{'field': 'hol', 'term': '"mir"'}, 'AND',
@@ -70,13 +70,12 @@ def test_termdicts():
              {'field': 'muss', 'term': 'ich'}, ')', '&&',
              {'field': None, 'term': '+"1 Brot essen!"'}, '||',
              {'field': None, 'term': '123'}]
-    assert(tsres == termdicts(ts))
+    assert(tsres == lp._termdicts(ts))
     # print('')
     # print ts
     # print(termdicts(ts))
     # assert
         
-   
 def test_parse():
     ts = ('term1 "term2" field1 : te\\"rm2 ( [2016 TO 2020:13:2] OR {A to "ABC"}) '
           '"field2"\\:haha: (term3 AND ("term hmm 4" OR field3:term5))')
@@ -94,7 +93,7 @@ def test_parse():
     # print(tsres)
     # print('------------------------------------------------------------------------------')
     # print(deparse(ts))
-    assert(deparse(ts) == tsres)
+    assert(lp.deparse(ts) == tsres)
 
 def test_assemble():
     ts = ('term1 "term2" AND field1 : te\\"rm2 ( [2016 TO 2020:13:2] OR '
@@ -104,7 +103,7 @@ def test_assemble():
              'q{A to "ABC"} ) NOT \}\] "field2"\:haha : ( "term3" AND  ( "term \\\"hmm'
              '4" OR field3:term5 ) )')
     
-    assert(tsres == assemble(deparse(ts)))
+    assert(tsres == lp.assemble(lp.deparse(ts)))
     # print('test_assemble')
     # print(tsres)
     # print('------------------------------------------------------------------------------')
