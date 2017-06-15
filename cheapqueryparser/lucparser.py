@@ -16,7 +16,7 @@ replacepairs = {
 
 revpairs = {
     'metaesc': ('_&_METAESC_&_', '\\\\'),
-    'quot': ('_&_QUOT_&_','\\'),
+    'quot': ('_&_QUOT_&_','\\"'),
     'space': ('_&_SPACE_&_', ' '),
     'colon': ('_&_COLON_&_', ':'),
     'pa': ('_&_PA_&_', '('),
@@ -53,10 +53,11 @@ def repspaces_in_ranges(qstring):
     Replace parenthesies in range terms and inside quotes.
     
     '''
-    rangeex = re.compile('(?<!\\\\)\{.*?(?<!\\\\)\}')
+    rangeex =  re.compile('(?<!\\\\)\{.*?(?<!\\\\)\}')
     rangeinc = re.compile('(?<!\\\\)\[.*?(?<!\\\\)\]')
-    quoted = re.compile('".*?"')
-    ranges = [rangeex, rangeinc, quoted]
+    regex =    re.compile('(?<!\\\\)\/.*?(?<!\\\\)\/')
+    quoted =   re.compile('".*?"')
+    ranges = [rangeex, rangeinc, regex, quoted]
     re_pairs = [replacepairs['space'], replacepairs['colon'],
                 replacepairs['pa'], replacepairs['rens']]
     for repair in re_pairs:
@@ -116,13 +117,35 @@ def parse(qstring):
 
 def unreplace(termdicts):
     '''Reverses all replacements'''
-    pass
-    
-    
-    
+    for termdict in termdicts:
+        if not isinstance(termdict, dict):
+            continue
+        for key in termdict.keys():
+            if termdict.get(key):
+                for fro, to in revpairs.values():
+                    termdict[key] = re.sub(fro, to, termdict[key])
+    return termdicts
 
+def deparse(qstring):
+    '''Returns the final list of query-tokens, where terms ore replaced with
+    dictionaries {'field': fieldname|None, 'term': 'the term'}
 
+    '''
+    return unreplace(parse(qstring))
 
+def assemble(termdicts):
+    "Assembles the list of tokens and term-dicts back to a querastring"
+    querylist = []
+    for termdict in termdicts:
+        if isinstance(termdict, dict):
+            tstring = termdict.get('field')
+            tstring = tstring + ' : ' if tstring else ''
+            tstring += termdict.get('term')
+            querylist.append(tstring)
+        else:
+            querylist.append(termdict)
+    query = ' '.join(querylist)
+    return query
 
 
 ## take that as starting point

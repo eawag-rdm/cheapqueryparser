@@ -22,15 +22,30 @@ def test_replace_esc_quotes():
 def test_repspaces_in_ranges():
     ts = (' jhas {82327 TO 938489} {kd\}k  TO  s\{ld} '
           '[38748374 TO 982938] \[kshsgh\] [ sdsd \]sdi\[pp p] '
-          '"2  ksj  od": jgt oia"kj lk"ca "a:a:a"'
+          '"2  ksj  od": jgt oia"kj lk"ca "a:a:a" /a reg(\/ :)e"x/'
           '[2017:12 TO 3:4] {9:1 TO 6}')
-    tsres = (' jhas {82327_&_SPACE_&_TO_&_SPACE_&_938489} '
-             '{kd\}k_&_SPACE_&_TO_&_SPACE_&_s\{ld} [38748374_&_SPACE'
-             '_&_TO_&_SPACE_&_982938] \[kshsgh\] [_&_SPACE_&_sdsd_&_SPACE_&_\]'
-             'sdi\[pp_&_SPACE_&_p] "2_&_SPACE_&_ksj_&_SPACE_&_od": jgt oia"kj_'
-             '&_SPACE_&_lk"ca "a_&_COLON_&_a_&_COLON_&_a"'
-             '[2017_&_COLON_&_12_&_SPACE_&_TO_&_SPACE_&_3_&_COLON_&_4] '
-             '{9_&_COLON_&_1_&_SPACE_&_TO_&_SPACE_&_6}')
+    # tsres = (' jhas {82327_&_SPACE_&_TO_&_SPACE_&_938489} '
+    #          '{kd\}k_&_SPACE_&_TO_&_SPACE_&_s\{ld} [38748374_&_SPACE'
+    #          '_&_TO_&_SPACE_&_982938] \[kshsgh\] [_&_SPACE_&_sdsd_&_SPACE_&_\]'
+    #          'sdi\[pp_&_SPACE_&_p] "2_&_SPACE_&_ksj_&_SPACE_&_od": jgt oia"kj_'
+    #          '&_SPACE_&_lk"ca "a_&_COLON_&_a_&_COLON_&_a"'
+    #          '[2017_&_COLON_&_12_&_SPACE_&_TO_&_SPACE_&_3_&_COLON_&_4] '
+    #          '{9_&_COLON_&_1_&_SPACE_&_TO_&_SPACE_&_6}')
+
+    tsres = (' jhas {82327_&_SPACE_&_TO_&_SPACE_&_938489} {kd\}k_&_SPACE_&_TO_&'
+             '_SPACE_&_s\{ld} [38748374_&_SPACE_&_TO_&_SPACE_&_982938] \[kshsg'
+             'h\] [_&_SPACE_&_sdsd_&_SPACE_&_\]sdi\[pp_&_SPACE_&_p] "2_&_SPACE'
+             '_&_ksj_&_SPACE_&_od": jgt oia"kj_&_SPACE_&_lk"ca "a_&_COLON_&_a_'
+             '&_COLON_&_a" /a_&_SPACE_&_reg_&_PA_&_\/_&_SPACE_&__&_COLON_&__&_'
+             'RENS_&_e"x/[2017_&_COLON_&_12_&_SPACE_&_TO_&_SPACE_&_3_&_COLON_&'
+             '_4] {9_&_COLON_&_1_&_SPACE_&_TO_&_SPACE_&_6}')
+
+    # print(' REPSPACES')
+    # print('--------------------------------------------------------------')
+    # print(tsres)
+    # print('--------------------------------------------------------------')
+    # print(repspaces_in_ranges(ts))
+    # print('--------------------------------------------------------------')
     assert(tsres == repspaces_in_ranges(ts))
 
 def test_addparenswhitespace():
@@ -70,24 +85,30 @@ def test_termdicts():
 def test_parse():
     ts = ('term1 "term2" field1 : te\\"rm2 ( [2016 TO 2020:13:2] OR {A to "ABC"}) '
           '"field2"\\:haha: (term3 AND ("term hmm 4" OR field3:term5))')
-    tsres = [{'field': None, 'term': 'term1'},
-             {'field': None, 'term': '"term2"'},
-             {'field': 'field1', 'term': 'te_&_QUOT_&_rm2'}, '(',
-             {'field': None, 'term':
-              '[2016_&_SPACE_&_TO_&_SPACE_&_2020_&_COLON_&_13_&_COLON_&_2]'},
-             'OR', {'field': None, 'term': '{A_&_SPACE_&_to_&_SPACE_&_"ABC"}'},
-             ')', {'field': '"field2"\\:haha', 'term':
-                   '(_&_SPACE_&_term3_&_SPACE_&_AND_&_SPACE_&_(_&_SPACE_&_"ter'
-                   'm_&_SPACE_&_hmm_&_SPACE_&_4"_&_SPACE_&_OR_&_SPACE_&_field3'
-                   '_&_COLON_&_term5_&_SPACE_&_)'}, ')']
-    assert(tsres == parse(ts))
+    tsres = [{'field': None, 'term': 'term1'}, {'field': None, 'term': '"term2"'},
+             {'field': 'field1', 'term': 'te\\"rm2'}, '(',
+             {'field': None, 'term': '[2016 TO 2020:13:2]'}, 'OR',
+             {'field': None, 'term': '{A to "ABC"}'}, ')',
+             {'field': '"field2"\\:haha', 'term': '( term3 AND ( "term hmm 4" OR field3:term5 )'},
+             ')']
+    # print('test_parse')
+    # print('------------------------------------------------------------------------------')
+    # print(tsres)
+    # print('------------------------------------------------------------------------------')
+    # print(deparse(ts))
+    assert(deparse(ts) == tsres)
+
+def test_assemble():
+    ts = ('term1 "term2" AND field1 : te\\"rm2 ( [2016 TO 2020:13:2] OR '
+          'q{A to "ABC"}) NOT \}\] "field2"\\:haha: ("term3" AND ("term \\\"hmm'
+          '4" OR field3:term5))')
+    tsres = ('term1 "term2" AND field1 : te\\"rm2 ( [2016 TO 2020:13:2] OR '
+             'q{A to "ABC"} ) NOT \}\] "field2"\:haha : ( "term3" AND ( "term \\\"hmm'
+             '4" OR field3:term5 ) )')
+    assert(tsres == assemble(deparse(ts)))
+
     # print('')
     # print(ts)
-    # print(parse(ts))
-
-
-
-           
-
+    # print(res)
 
     
