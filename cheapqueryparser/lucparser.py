@@ -8,7 +8,7 @@ import re
 replacepairs = {
     'metaesc': ('\\\\\\\\', '_&_METAESC_&_'),
     'quot': ('\\\\"', '_&_QUOT_&_'),
-    'space': ('\s+', '_&_SPACE_&_'),
+    'space': ('\s', '_&_SPACE_&_'),
     'colon': (':', '_&_COLON_&_'),
     'pa': ('\\(', '_&_PA_&_'),
     'rens': ('\\)', '_&_RENS_&_'),
