@@ -24,13 +24,6 @@ def test_repspaces_in_ranges():
           '[38748374 TO 982938] \[kshsgh\] [ sdsd \]sdi\[pp p] '
           '"2  ksj  od": jgt oia"kj lk"ca "a:a:a" /a reg(\/ :)e"x/'
           '[2017:12 TO 3:4] {9:1 TO 6}')
-    # tsres = (' jhas {82327_&_SPACE_&_TO_&_SPACE_&_938489} '
-    #          '{kd\}k_&_SPACE_&_TO_&_SPACE_&_s\{ld} [38748374_&_SPACE'
-    #          '_&_TO_&_SPACE_&_982938] \[kshsgh\] [_&_SPACE_&_sdsd_&_SPACE_&_\]'
-    #          'sdi\[pp_&_SPACE_&_p] "2_&_SPACE_&_ksj_&_SPACE_&_od": jgt oia"kj_'
-    #          '&_SPACE_&_lk"ca "a_&_COLON_&_a_&_COLON_&_a"'
-    #          '[2017_&_COLON_&_12_&_SPACE_&_TO_&_SPACE_&_3_&_COLON_&_4] '
-    #          '{9_&_COLON_&_1_&_SPACE_&_TO_&_SPACE_&_6}')
 
     tsres = (' jhas {82327_&_SPACE_&_TO_&_SPACE_&_938489} {kd\}k_&_SPACE_&_TO_&'
              '_SPACE_&_s\{ld} [38748374_&_SPACE_&_TO_&_SPACE_&_982938] \[kshsg'
@@ -42,7 +35,7 @@ def test_repspaces_in_ranges():
 
     # print(' REPSPACES')
     # print('--------------------------------------------------------------')
-    # print(tsres)
+    # print(ts)
     # print('--------------------------------------------------------------')
     # print(repspaces_in_ranges(ts))
     # print('--------------------------------------------------------------')
