@@ -1,4 +1,4 @@
-# cheapqueryparser
+# lucparser
 
 A simple parser for Lucene/Solr querystrings.
 
@@ -12,7 +12,7 @@ in an ad-hoc fashion. However, since any extension can implement
 `before_search` and introduce more complicated constructs, one can not
 rely on a particular form of this query. Proper parsing of the
 querystring, which is aimed at human legibility, turns out to be
-astonishingly involved. `cheapqueryparser.lucparser` helps with this.
+astonishingly involved. `lucparser` helps with this.
 
 ## Description
 
@@ -24,13 +24,13 @@ where each "term" is represented by a dictionary of the form
 If a search term is general (doesn't relate to a specific field),
 `fieldname=None`.
 
-The module provides two functions:
+The module provides a class `LucParser` with two functions:
 
-1. `deparse(querystring)`   
+1. `LucParser.deparse(querystring)`   
     Takes the querystring an returns a list of tokens, where "terms" are
     replaced with dictionaries {'field': fieldname, 'term': termvalue}.
 
-2. `assemble(termlist)`   
+2. `LucParser.assemble(termlist)`   
     Takes a list of the form returned by deparse. Returns a querystring.
 
 The implementation of this module is informed by the
@@ -40,7 +40,8 @@ The implementation of this module is informed by the
 
 ```python
 
-import cheapqueryparser.lucparser as lp
+from lucparser import LucParser
+lp = LucParser()
 
 qlist = lp.deparse('author: Meier tags:(water OR fire) "open access"')
 print(qlist)
