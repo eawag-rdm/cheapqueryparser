@@ -7,14 +7,14 @@ _{'field': fieldname, 'term': termvalue}
 
 If a search term is general (doesn't relate to a specific field, fieldname=None.
 
-The module provides two functions:
+The module provides a class `LucParser` with two functions:
 
-deparse(querystring):
+LucParser.deparse(querystring):
 
 Takes the querystring an returns a list of tokens, where "terms" are
 replaced with dictionaries {'field': fieldname, 'term': termvalue}.
 
-assemble(termlist):
+LucParser.assemble(termlist):
 
 Takes a list of the form returned by deparse. Returns a querystring.
 
@@ -24,7 +24,8 @@ https://lucene.apache.org/core/6_6_0/queryparser/org/apache/lucene/
 queryparser/classic/package-summary.html#package.description
 
 Example:
-import cheapqueryparser.lucparser as lp
+from lucparser import LucParser
+lp = LucParser()
 
 qlist = lp.deparse('author: Meier tags:(water OR fire) "open access"')
 print(qlist)
