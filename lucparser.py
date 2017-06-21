@@ -50,6 +50,8 @@ lp.assemble(qlist)
 
 import re
 
+__version__ = '1.0.0'
+
 class LucParser(object):
     def __init__(self):
         self.replacepairs = {
