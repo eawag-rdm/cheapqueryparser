@@ -3,10 +3,9 @@
 import sys
 import os.path
 import json
-curpath = os.path.dirname(os.path.realpath(__file__))
-mainpath = os.path.abspath(os.path.join(curpath, '../..'))
-sys.path.insert(0, mainpath)
-import cheapqueryparser.lucparser as lp
+from lucparser import LucParser
+
+lp = LucParser()
 
 def test_replace_metaescape():
     ts = r'abc\de \\fg\\h\i  j\k\\l\\\m'
