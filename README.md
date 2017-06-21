@@ -34,9 +34,9 @@ The module provides a class `LucParser` with two functions:
     Takes a list of the form returned by deparse. Returns a querystring.
 
 3. `LucParser.add_to_query(querystring, addstring, fieldname=None)`   
-    Searches all occurrences of <fieldname> in <querystring>,
-	if <fieldname> is not None. Adds <addstring> to the subquery.
-	If <fieldname> is None, puts parenthesies around whole querystring
+    Searches all occurrences of &lt;fieldname&gt; in &lt;querystring&gt;,
+	if \<fieldname\> is not None. Adds \<addstring\> to the subquery.
+	If \<fieldname\> is None, puts parenthesies around whole querystring
 	and adds querystring at the end.
 
 
