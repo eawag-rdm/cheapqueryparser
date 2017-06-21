@@ -108,4 +108,25 @@ def test_assemble():
     # print('------------------------------------------------------------------------------')
     # print(assemble(deparse(ts)))
 
+def test_get_fieldname_indices():
+    ts = ['(', 'AND', {'field': 'fn_one', 'term': 'term_one'},
+          ')', 'OR', {'field': 'fn_two', 'term': 'term_two'},
+          '[','what',  {'field': 'fn_one', 'term': 'term_one_1'},')']
+
+    assert(lp._get_fieldname_indices(ts, 'fn_one') == [2, 8])
+    assert(lp._get_fieldname_indices(ts, 'fn_two') == [5])
+    assert(lp._get_fieldname_indices(ts, 'fn_not') == [])
+
+def test_add_to_query():
+    q = ('field1: (son quatsch) AND field2: pfffrt (haalo OR field1: (ich OR er) '
+         ') globalterm field1 : yepp')
+         
+    res = lp.add_to_query(q, 'OR "ich auch"', fieldname='field1')
+    assert(res == 'field1 : (( son quatsch ) OR "ich auch") AND field2 '
+           ': pfffrt ( haalo OR field1 : (( ich OR er ) OR "ich auch") ) '
+           'globalterm field1 : (yepp OR "ich auch")')
+    res = lp.add_to_query(q, 'OR "ich auch"')
+    assert(res == '( field1: (son quatsch) AND field2: pfffrt (haalo OR field1'
+           ': (ich OR er) ) globalterm field1 : yepp ) OR "ich auch"')
     
+

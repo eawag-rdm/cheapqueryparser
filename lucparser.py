@@ -7,7 +7,7 @@ _{'field': fieldname, 'term': termvalue}
 
 If a search term is general (doesn't relate to a specific field, fieldname=None.
 
-The module provides a class `LucParser` with two functions:
+The module provides a class `LucParser` with three functions:
 
 LucParser.deparse(querystring):
 
@@ -17,6 +17,14 @@ replaced with dictionaries {'field': fieldname, 'term': termvalue}.
 LucParser.assemble(termlist):
 
 Takes a list of the form returned by deparse. Returns a querystring.
+
+LucParser.add_to_query(querystring, addstring, fieldname=None):
+
+Searches all occurrences of <fieldname> in <querystring>,
+if <fieldname> is not None. Adds <addstring> to the subquery.
+If <fieldname is None>, puts parenthesies around whole querystring
+and adds querystring at the end.
+
 
 The implementation of this module is informed by the
 lucene query-parser documentation:
@@ -176,6 +184,17 @@ class LucParser(object):
                         termdict[key] = re.sub(fro, to, termdict[key])
         return termdicts
 
+    def _get_fieldname_indices(self, termdict, fieldname):
+        '''Returns the indices for which termdict has a fieldquery
+        with <filedname>.
+
+        '''
+        idxs = [iterm
+                for iterm, obj in enumerate(termdict) if isinstance(obj, dict)
+                if obj['field'] == fieldname]
+        return idxs
+
+
     def deparse(self, qstring):
         '''Returns the final list of query-tokens, where terms ore replaced with
         dictionaries {'field': fieldname|None, 'term': 'the term'}
@@ -196,3 +215,34 @@ class LucParser(object):
                 querylist.append(termdict)
         query = ' '.join(querylist)
         return query
+    
+    def add_to_query(self, querystring, addstring, fieldname=None):
+        '''Searches all occurrences of <fieldname> in <querystring>,
+        if <fieldname> is not None. Adds <addstring> to the subquery.
+        If <fieldname is None>, puts parenthesies around whole querystring
+        and adds querystring at the end.
+
+        Examples:
+           fq='field1: (son quatsch) AND field2: pfffrt'
+           fq = add_to_query(fq, 'OR "ich auch"', fieldname='field1')
+           
+           -> fq=='field1: (((son quatsch)) OR "ich auch") AND field2: pfffrt'
+
+           fq='field1: (son quatsch) AND field2: pfffrt'
+           fq = add_to_query(fq, 'OR egal', fieldname=None)
+
+           -> fq=='(field1: (son quatsch) AND field2: pfffrt) OR egal'
+
+        '''
+        
+        if fieldname:
+            dep = self.deparse(querystring)
+            idx = self._get_fieldname_indices(dep, fieldname)
+            newterms = ['({} {})'.format(dep[i]['term'], addstring)
+                        for i in idx]
+            for i, nt in zip(idx, newterms):
+                dep[i]['term'] = nt
+            return self.assemble(dep)
+        else:
+            return '( {} ) {}'.format(querystring, addstring)
+                

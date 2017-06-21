@@ -33,6 +33,13 @@ The module provides a class `LucParser` with two functions:
 2. `LucParser.assemble(termlist)`   
     Takes a list of the form returned by deparse. Returns a querystring.
 
+3. `LucParser.add_to_query(querystring, addstring, fieldname=None)`   
+    Searches all occurrences of <fieldname> in <querystring>,
+	if <fieldname> is not None. Adds <addstring> to the subquery.
+	If <fieldname> is None, puts parenthesies around whole querystring
+	and adds querystring at the end.
+
+
 The implementation of this module is informed by the
 [lucene query-parser documentation](https://lucene.apache.org/core/6_6_0/queryparser/org/apache/lucene/queryparser/classic/package-summary.html#package.description).
 
@@ -61,5 +68,15 @@ print(qlist)
 lp.assemble(qlist)
 
 > 'author : (Meier OR Mueller -Donald) tags : ( water OR fire ) "open access"'
+
+q = 'author: Meier tags:(water OR fire) "open access" tags: keyword'
+q1 = lp.add_to_query(q, 'AND caffee', fieldname='tags')
+print(q1)
+
+> 'author : Meier tags : (( water OR fire ) AND caffee) "open access" tags : (keyword AND caffee)'
+
+q2 =  lp.add_to_query(q, 'AND caffee')
+
+> '( author: Meier tags:(water OR fire) "open access" tags: keyword ) AND caffee'
 
 ```
